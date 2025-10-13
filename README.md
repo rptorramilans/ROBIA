@@ -8,3 +8,5 @@ This application has demonstrated the importance of integrating dye tracing with
 **Code developer:** Raquel Peñas Torramilans from Laboratori d'Enginyeria Marítima (LIM-UPC), Universitat Politècnica de Catalunya (UPC-BarcelonaTech), **raquel.penas@upc.edu**
 
 **Cite** ...
+
+<img width="1229" height="922" alt="image1107" src="https://github.com/user-attachments/assets/fbd71f75-60e6-4651-8741-d22510721aa7" />
