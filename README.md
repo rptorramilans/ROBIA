@@ -5,8 +5,6 @@ The workflow starts with UAV image acquisition and subsequently extraction of **
 
 This application has demonstrated the importance of integrating dye tracing with infrastructure identification for accurate mapping results. The method is suitable for rhodamine experiments in obstructed environments such as marinas, offshore wind farms and aquaculture facilities. The code and example datasets are openly available, and can easily be adapted to dispersion studies in diverse aquatic environments.
 
-**Fast start file (and test case):** robia_fs_tc.txt
-
 **Code developer:** Raquel Peñas Torramilans from Laboratori d'Enginyeria Marítima (LIM-UPC), Universitat Politècnica de Catalunya (UPC-BarcelonaTech), **raquel.penas@upc.edu**
 
 **Cite** ...
