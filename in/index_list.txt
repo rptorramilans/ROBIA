@@ -3,7 +3,6 @@ G | G
 B | B
 R / G | R / G
 R / B | R / B
-R**2 / (G * B) | R^2 / (G*B)
 2*R - G - B | 2R - G - B
 R / (G + B) | R / (G + B)
 (R - G) / (R + G) | (R - G)/(R + G)
@@ -14,3 +13,4 @@ R - G - B | R - G - B
 R**2 / (G + B) | R^2 / (G+B)
 R / (R + G + B) | R / (R+G+B)
 R - np.mean(np.vstack([G,B]), axis=0) | R - mean(G,B)
+
