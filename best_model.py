@@ -1,6 +1,6 @@
 """
 Created on Fri Oct 10 2025 ‏‎‏‎17:59:38
-Code part of RHOD (UPC-BarcelonaTech)
+Code part of ROBIA (UPC-BarcelonaTech)
 Last modified on Mon Oct 13 2025
 @author: raquel peñas torramilans
 @contact: raquel.penas@upc.edu
@@ -12,7 +12,9 @@ from scipy.io import savemat
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-data = pd.read_csv('insitu_rho.txt', sep=r'\s+', decimal='.')
+import params as p
+
+data = pd.read_csv(p.output_file, sep=r'\s+', decimal='.')
 
 C = data['C'].to_numpy(float)
 R = np.maximum(data['R'].to_numpy(float), np.finfo(float).eps)
@@ -88,7 +90,7 @@ print("\n=== correlation results with fluorimeter ===")
 print(T)
 
 T.to_csv('results_indices.txt', sep='\t', index=False)
-print("\nSaved results to: results_indices.txt")
+print("\nSaved results to: out_indices.txt")
 
 best_row = T.iloc[0]
 best_label = best_row['Index']
@@ -132,4 +134,4 @@ model_concentration = {
 }
 
 best_model = model_concentration['best']
-print(f" - Best model: {best_label}")
+
