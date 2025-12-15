@@ -1,18 +1,18 @@
 """
 Created on Wed Oct 1 2025 ‏‎12:37:26
 Code part of RHOD (UPC-BarcelonaTech)
-Last modified on Mon Nov 24 2025
+Last modified on Fri Nov 28 2025
 @author: raquel peñas torramilans
 @contact: raquel.penas@upc.edu
 """
 ### preprocessing
 
-coords_file = "E:/UPC/02_Rhodamine_Methods/Py/coords_koot.csv"               # Fitxer amb HORA, PERFIL, X, Y, FLUORIMETRO
+coords_file = "E:/UPC/02_Rhodamine_Methods/Py/coords_best.csv"               # Fitxer amb HORA, PERFIL, X, Y, FLUORIMETRO
 input_folder = "E:/UPC/02_Rhodamine_Methods/Py"      
-output_file = "E:/UPC/02_Rhodamine_Methods/Py/insitu_rgb_koot.txt"  # Fitxer de sortida (us per best_model.py)
+output_file = "E:/UPC/02_Rhodamine_Methods/Py/insitu_rgb.txt"  # Fitxer de sortida (us per best_model.py)
 
 ### input files
-processing_mode = 0                                        # 1 for multiple, 0 for single
+processing_mode = 1                                        # 1 for multiple, 0 for single
 calibration = 1                                        # 1 for YES, 0 for NO
 input_tif = "16_37_nou.tif"                                   # original georreferenced image
 input_folder = "E:/UPC/02_Rhodamine_Methods/Py"     # folder with georreferenced images
@@ -23,21 +23,26 @@ index_map_tif = "index_map.tif"                 # concentration map
 rhodamine_mask_tif = "rhoda_mask.tif"           # rhodamine mask
 concentration_map_tif = "concentration_map.tif" # concentration map
 segmentation_map_tif = "segmentation_map.tif" # concentration map
-output_folder = "E:/UPC/02_Rhodamine_Methods/Py/results" 
+output_folder = "E:/UPC/02_Rhodamine_Methods/Py/results/last" 
 
 ### obstruction mask parameters
 processing_obstruction = 1                      # 1 for YES, 0 for NO
-obs_thresh = 200 / 255.0                        # threshold for detecting white structure. scale [0,1]
+#obs_thresh = 200 / 255.0 
+obs_thresh = 200 / 255.0    # satellite                    # threshold for detecting white structure. scale [0,1]
 #obs_thresh = 150 / 255.0 koot
-obs_disk = 5                                    # disk radius for expansion
-obs_min = 100                                   	# minimum size of objects to be removed in the mask
-
+#obs_disk = 5
+obs_disk = 0 # satellite                                 # disk radius for expansion
+#obs_min = 100                                   	# minimum size of objects to be removed in the mask
+obs_min = 0 # satellite 
 ### rhodamine detection parameters
 index_single = "r/g"                             # R/G
 index_thresh = 1   
+thr_fraction = 0.02                             # Threshold target fraction of max concentration
+
 #red_thresh = 0.95                              # Umbral para índice de rojez
 rho_disk = 0                                    # disk radius for expansion
-rho_min = 500                                  	# minimum size of objects to be removed in the selection
+#rho_min = 500                                  	# minimum size of objects to be removed in the selection
+rho_min = 0 
 
 ### concentration map parameters
 conc_min = 0                                    # minimum concentration value
@@ -52,3 +57,4 @@ title_conc_map = "concentration map"
 segmentation_map_tif = "classification"
 xlabel = "latitude"
 ylabel = "longitude"
+
