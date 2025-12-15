@@ -1,10 +1,111 @@
 """
-Created on Fri Oct 10 2025 ‏‎‏‎17:59:38
+Created on Fri Nov 5 2025
 Code part of ROBIA (UPC-BarcelonaTech)
-Last modified on Mon Oct 13 2025
-@author: raquel peñas torramilans
+Last modified on Fri Nov 5 2025
+@author: Raquel Peñas Torramilans
 @contact: raquel.penas@upc.edu
 """
+
+import os
+import pandas as pd
+import numpy as np
+import rasterio
+from datetime import datetime
+
+# preprocessing parameters
+import params as p
+
+# 1) llegir fitxer de coordenades
+tabla = pd.read_csv(p.coords_file, sep=';', decimal='.')
+
+# 2) normalitzar format de l’hora i llegir noms de les imatges i extreure hores disponibles
+if np.issubdtype(tabla['HORA'].dtype, np.datetime64):
+    tabla['HORA'] = tabla['HORA'].dt.strftime('%H:%M')
+else:
+    tabla['HORA'] = tabla['HORA'].astype(str).str.extract(r'(\d{1,2}:\d{2})')[0]
+
+result_rows = []
+
+files = [f for f in os.listdir(p.input_folder) if f.lower().endswith('.tiff')]
+available_times = []
+for f in files:
+    try:
+        t = f.split('.')[0]  # treu extensió
+        t = t.replace('_', ':')  # "11_16" -> "11:16"
+        datetime.strptime(t, "%H:%M")  # comprovar format
+        available_times.append(t)
+    except:
+        pass
+
+# 3) iterar per hora
+for hora in sorted(tabla['HORA'].unique()):
+    # buscar la imatge amb hora més propera
+    try:
+        hora_dt = datetime.strptime(hora, "%H:%M")
+        diffs = [abs((hora_dt - datetime.strptime(ht, "%H:%M")).total_seconds()) for ht in available_times]
+        nearest_time = available_times[np.argmin(diffs)]
+        hora_file = nearest_time.replace(':', '_')
+    except Exception:
+        print(f"No valid image found for hour {hora}")
+        continue
+
+    img_path = os.path.join(p.input_folder, f"{hora_file}.tiff")
+
+    if not os.path.exists(img_path):
+        print(f"Image not found: {img_path}")
+        continue
+
+    try:
+        with rasterio.open(img_path) as src:
+            img = src.read()  # shape = (bands, rows, cols)
+            transform = src.transform
+    except Exception as e:
+        print(f"Error while reading {img_path}: {e}")
+        continue
+
+    subset = tabla[tabla['HORA'] == hora].copy()
+    Rvals, Gvals, Bvals = [], [], []
+
+    for x, y in zip(subset['X'], subset['Y']):
+        try:
+            col, row = ~transform * (x, y)
+            col, row = int(round(col)), int(round(row))
+
+            if 0 <= row < img.shape[1] and 0 <= col < img.shape[2]:
+                Rvals.append(float(img[0, row, col]))
+                Gvals.append(float(img[1, row, col]))
+                Bvals.append(float(img[2, row, col]))
+            else:
+                Rvals += [np.nan]
+                Gvals += [np.nan]
+                Bvals += [np.nan]
+        except Exception:
+            Rvals += [np.nan]
+            Gvals += [np.nan]
+            Bvals += [np.nan]
+
+    subset['R'] = Rvals
+    subset['G'] = Gvals
+    subset['B'] = Bvals
+    subset['IMATGE_USADA'] = hora_file  # opcional per saber quina imatge s'ha fet servir
+
+    result_rows.append(subset)
+
+# 4) combinar resultats
+if result_rows:
+    tabla_resultado = pd.concat(result_rows, ignore_index=True)
+else:
+    print("RGB not extracted, no results generated.")
+    exit()
+
+# 5) guardar resultats
+if p.output_file.lower().endswith(('.xlsx', '.xls')):
+    tabla_resultado.to_excel(p.output_file, index=False)
+else:
+    tabla_resultado.to_csv(p.output_file, index=False, sep='\t')
+
+print(f"File saved correctly: {p.output_file}")
+
 
 import numpy as np
 import pandas as pd
@@ -56,8 +157,8 @@ for i, x in enumerate(indices):
 
     r = np.corrcoef(x_valid, y_valid)[0, 1]
 
-    p = np.polyfit(x_valid, y_valid, 1)
-    y_fit = np.polyval(p, x_valid)
+    poly = np.polyfit(x_valid, y_valid, 1)
+    y_fit = np.polyval(poly, x_valid)
 
     SS_res = np.sum((y_valid - y_fit) ** 2)
     SS_tot = np.sum((y_valid - np.mean(y_valid)) ** 2)
@@ -65,9 +166,9 @@ for i, x in enumerate(indices):
     RMSE = np.sqrt(np.mean((y_valid - y_fit) ** 2))
     MAPE = np.mean(np.abs((y_valid - y_fit) / y_valid)) * 100
 
-    target_conc = 0.05 * np.max(y_valid)
+    target_conc = p.thr_fraction * np.max(y_valid)
     x_lin = np.linspace(np.min(x_valid), np.max(x_valid), 1000)
-    y_lin = np.polyval(p, x_lin)
+    y_lin = np.polyval(poly, x_lin)
     idx_t = np.argmin(np.abs(y_lin - target_conc))
     red_threshold = x_lin[idx_t]
 
@@ -100,12 +201,12 @@ valid = ~np.isnan(best_idx) & ~np.isnan(C)
 x = best_idx[valid]
 y = C[valid]
 
-p = np.polyfit(x, y, 1)
-y_fit = np.polyval(p, x)
+poly = np.polyfit(x, y, 1)
+y_fit = np.polyval(poly, x)
 
 plt.figure(figsize=(6, 5))
 plt.plot(x, y, 'ok', markersize=4, label='Data')
-plt.plot(np.sort(x), np.polyval(p, np.sort(x)), 'k-', linewidth=2, label='Linear fit')
+plt.plot(np.sort(x), np.polyval(poly, np.sort(x)), 'k-', linewidth=2, label='Linear fit')
 plt.xlabel(best_label)
 plt.ylabel('Rhodamine WT Concentration (ppb)')
 plt.title(f'Best correlation: {best_label}', fontweight='bold')
@@ -124,7 +225,7 @@ except Exception as e:
 model_concentration = {
     'best': {
         'Index': best_label,
-        'Poly': p,
+        'Poly': poly,
         'R2': best_row['R2'],
         'RMSE': best_row['RMSE'],
         'MAPE': best_row['MAPE'],
