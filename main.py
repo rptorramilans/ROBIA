@@ -7,6 +7,7 @@ Last modified on Mon Nov 24 2025
 """
 
 import os
+import json
 import numpy as np
 import rasterio
 from skimage.color import rgb2gray
@@ -17,9 +18,29 @@ import matplotlib.ticker as mticker
 import matplotlib.colors as colors
 import numpy.ma as ma
 import matplotlib.patches as mpatches
+import pandas as pd
 
 # robia parameters
 import params as p
+
+# ==========================================================
+#                   CALIBRATION (IF CHOOSED)
+# ==========================================================
+
+if p.calibration == 1:
+
+    from extract_coordinates import extract_coordinates
+    tabla_resultado = extract_coordinates()  # extreu RGB i guarda fitxer
+
+    from calibration import calibrate
+    best_model = calibrate()  # retorna dict amb millor índex
+
+else:
+    best_model = None
+
+# ==========================================================
+#                   IMAGE LIST
+# ==========================================================
 
 # choose single or multiple images
 if p.processing_mode == 0:
@@ -31,8 +52,12 @@ else:
         if f.lower().endswith(('.tif', '.tiff'))
     ]
 
-# main code
+# ==========================================================
+#                   MAIN LOOP
+# ==========================================================
+
 for path in image_paths:
+
     name = os.path.splitext(os.path.basename(path))[0]
     print(f"\n--- Processing image: {name} ---")
 
@@ -81,23 +106,24 @@ for path in image_paths:
         plt.title(p.title_mask)
         plt.xlabel(p.xlabel)
         plt.ylabel(p.ylabel)
-        plt.gca().xaxis.set_major_formatter(mticker.StrMethodFormatter("{x:.0f}"))
-        plt.gca().yaxis.set_major_formatter(mticker.StrMethodFormatter("{x:.0f}"))
         plt.show()
 
-        # save obstruction mask
         mask_out = masking.astype(np.uint8)
-        if p.processing_mode == 0:
-            out_tif = p.obstruction_mask_tif
-        else:
-            out_tif = os.path.join(p.output_folder, f"{name}_obstruction_mask.tif")
+        out_tif = (
+            p.obstruction_mask_tif
+            if p.processing_mode == 0
+            else os.path.join(p.output_folder, f"{name}_obstruction_mask.tif")
+        )
+
         with rasterio.open(
             out_tif, "w", driver="GTiff",
             height=mask_out.shape[0], width=mask_out.shape[1],
             count=1, dtype=mask_out.dtype, crs=crs, transform=R
         ) as dst:
             dst.write(mask_out, 1)
+
         print(f"Obstruction mask saved: {out_tif}")
+
     else:
         masking = np.zeros(img.shape[:2], dtype=bool)
         print("No obstruction mask applied.")
@@ -109,136 +135,61 @@ for path in image_paths:
     Rch, Gch, Bch = img_float[..., 0], img_float[..., 1], img_float[..., 2]
 
     # 5) apply index
-    import pandas as pd
-    if p.processing_mode == 0:
-        # --- SINGLE IMAGE MODE ---
-        if p.calibration == 1:
-            # Use calibration model from best_model.py
-            from best_model import best_model
-            T = pd.read_csv("results_indices.txt", sep="\t")
-            idx_name = best_model["Index"]
-            row = T.loc[T["Index"] == idx_name]
-            red_threshold = row["red_threshold"].values[0]
-            func_code = best_model["Func"]
-            func_handle = eval(func_code, {"np": np}) if isinstance(func_code, str) else func_code
-            print(f"Using calibrated index: {idx_name}")
-        else:
-            # Use manual index from params.py
-            idx_name = p.index_single
-            red_threshold = p.index_thresh
-            if idx_name.lower() == "r/g":
-                func_handle = lambda R, G, B: R / (G + np.finfo(float).eps)
-            elif idx_name.lower() == "r/b":
-                func_handle = lambda R, G, B: R / (B + np.finfo(float).eps)
-            elif idx_name.lower() == "r/(b+g)":
-                func_handle = lambda R, G, B: R / (B + G + np.finfo(float).eps)
-            else:
-                raise ValueError(f"Unknown index specified in params: {idx_name}")
-            print(f"Using manual index: {idx_name}")
-    else:
-        # --- MULTIPLE IMAGE MODE ---
-        from best_model import best_model
-        T = pd.read_csv("results_indices.txt", sep="\t")
-        idx_name = best_model["Index"]
-        row = T.loc[T["Index"] == idx_name]
-        red_threshold = row["red_threshold"].values[0]
-        func_code = best_model["Func"]
-        func_handle = eval(func_code, {"np": np}) if isinstance(func_code, str) else func_code
-        print(f"Using calibrated index for batch: {idx_name}")
+    if p.calibration == 1:
 
-    # Compute index
+        idx_name = best_model["Index"]
+        red_threshold = best_model["red_threshold"]
+        func_handle = eval(best_model["Func"], {"np": np})
+
+        print(f"Using calibrated index: {idx_name}")
+
+    else:
+
+        idx_name = p.index_single
+        red_threshold = p.index_thresh
+
+        if idx_name.lower() == "r/g":
+            func_handle = lambda R, G, B: R / (G + np.finfo(float).eps)
+        elif idx_name.lower() == "r/b":
+            func_handle = lambda R, G, B: R / (B + np.finfo(float).eps)
+        elif idx_name.lower() == "r/(b+g)":
+            func_handle = lambda R, G, B: R / (B + G + np.finfo(float).eps)
+        else:
+            raise ValueError(f"Unknown index specified in params: {idx_name}")
+
+        print(f"Using manual index: {idx_name}")
+
     idxR = func_handle(Rch, Gch, Bch)
 
-    # visualize and save index map
-    plt.figure()
-    plt.imshow(idxR, cmap="binary", extent=[xWorld[0], xWorld[-1], yWorld[-1], yWorld[0]])
-    plt.colorbar(label=f"{idx_name} value")
-    plt.title(f"{p.title_rhodamine} ({idx_name})")
-    plt.xlabel(p.xlabel)
-    plt.ylabel(p.ylabel)
-    plt.gca().xaxis.set_major_formatter(mticker.StrMethodFormatter("{x:.0f}"))
-    plt.gca().yaxis.set_major_formatter(mticker.StrMethodFormatter("{x:.0f}"))
-    plt.tight_layout()
-    plt.show()
-
-    idxR_clean = np.nan_to_num(idxR, nan=0.0, posinf=0.0, neginf=0.0)
-    idx_norm = (idxR_clean - np.nanmin(idxR_clean)) / (np.nanmax(idxR_clean) - np.nanmin(idxR_clean))
-    idx_uint8 = (idx_norm * 255).astype(np.uint8)
-
-    if p.processing_mode == 0:
-        index_tif = p.index_map_tif
-    else:
-        index_tif = os.path.join(p.output_folder, f"{name}_index_map.tif")
-
-    with rasterio.open(
-        index_tif, "w", driver="GTiff",
-        height=idx_uint8.shape[0], width=idx_uint8.shape[1],
-        count=1, dtype="uint8", crs=crs, transform=R
-    ) as dst:
-        dst.write(idx_uint8, 1)
-    print(f"Index map saved: {index_tif}")
-
     # 6) rhodamine mask
-
-    # 6) Rhodamine mask
     if p.calibration == 1:
         a, b = best_model["Poly"]
         if a >= 0:
-            mask_red = (idxR > red_threshold) & (~masking) & (~nodata_mask)
+            mask_red = (idxR > red_threshold)
         else:
-            mask_red = (idxR < red_threshold) & (~masking) & (~nodata_mask)
+            mask_red = (idxR < red_threshold)
     else:
-        mask_red = (idxR > red_threshold) & (~masking) & (~nodata_mask)
+        mask_red = (idxR > red_threshold)
 
-
+    mask_red = mask_red & (~masking) & (~nodata_mask)
     mask_red = binary_fill_holes(mask_red)
     mask_red = opening(mask_red, disk(p.rho_disk))
     mask_red = remove_small_objects(mask_red, min_size=p.rho_min)
 
-    plt.figure()
-    plt.imshow(~mask_red, cmap="gray", extent=[xWorld[0], xWorld[-1], yWorld[-1], yWorld[0]])
-    plt.title(f"{p.title_rhodamine} ({idx_name})")
-    plt.xlabel(p.xlabel)
-    plt.ylabel(p.ylabel)
-    plt.gca().xaxis.set_major_formatter(mticker.StrMethodFormatter("{x:.0f}"))
-    plt.gca().yaxis.set_major_formatter(mticker.StrMethodFormatter("{x:.0f}"))
-    plt.show()
-
-    mask_red_out = (~mask_red).astype(np.uint8)
-    if p.processing_mode == 0:
-        rhod_mask_tif = p.rhodamine_mask_tif
-    else:
-        rhod_mask_tif = os.path.join(p.output_folder, f"{name}_rhodamine_mask.tif")
-
-    with rasterio.open(
-        rhod_mask_tif, "w", driver="GTiff",
-        height=mask_red_out.shape[0], width=mask_red_out.shape[1],
-        count=1, dtype=mask_red_out.dtype, crs=crs, transform=R
-    ) as dst:
-        dst.write(mask_red_out, 1)
-    print(f"Rhodamine mask saved: {rhod_mask_tif}")
-
     # 7) apply calibration model
-
     conc_map = np.full_like(idxR, np.nan)
 
     if p.calibration == 1:
-        # Apply polynomial calibration model
-        from best_model import best_model
         conc_map[mask_red] = np.polyval(best_model["Poly"], idxR[mask_red])
         print("Applied calibrated polynomial model.")
     else:
-        # Scale linearly between defined concentration min/max
         idx_valid = idxR[mask_red]
-        if np.nanmax(idx_valid) > np.nanmin(idx_valid):
-            conc_map[mask_red] = np.interp(
-                idx_valid,
-                (np.nanmin(idx_valid), np.nanmax(idx_valid)),
-                (p.conc_min, p.conc_max)
-            )
-            print("Applied normalized concentration scaling (no calibration).")
-        else:
-            conc_map[mask_red] = np.nan
+        conc_map[mask_red] = np.interp(
+            idx_valid,
+            (np.nanmin(idx_valid), np.nanmax(idx_valid)),
+            (p.conc_min, p.conc_max)
+        )
+        print("Applied normalized concentration scaling (no calibration).")
 
 
     plt.figure()
@@ -382,11 +333,10 @@ with open(report, "w") as frep:
     frep.write(st)
     print(st)
 
-    # Best model info
     try:
-        from best_model import best_model
         model_name = best_model.get("Index", "N/A")
         model_poly = best_model.get("Poly", [0, 0])
+
         st = "Best model selected:              {:>20s}\n".format(model_name)
         frep.write(st)
         print(st)
@@ -394,6 +344,7 @@ with open(report, "w") as frep:
         st = "Calibration polynomial:            {:>20s}\n".format(str(model_poly))
         frep.write(st)
         print(st)
+
     except Exception as e:
         st = f"Best model information unavailable ({e})\n"
         frep.write(st)
@@ -413,4 +364,5 @@ with open(report, "w") as frep:
     print(st)
 
 print("\nReport file created: {}".format(report))
+
 
