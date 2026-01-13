@@ -124,7 +124,7 @@ def calibrate():
 
     best_model = {
         'Index': best_label,
-        'Poly': poly.tolist(),          # 👈 CLAVAU
+        'Poly': poly.tolist(),          #
         'Func': func_code,
         'R2': float(best_row['R2']),
         'RMSE': float(best_row['RMSE']),
@@ -137,6 +137,4 @@ def calibrate():
         json.dump(best_model, f, indent=4)
 
     return best_model
-
-best_model = model_concentration['best']
 
