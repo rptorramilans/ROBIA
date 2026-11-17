@@ -1,4 +1,3 @@
-
 cff-version: 1.2.0
 message: "If you use ROBIA, please cite this software using its version-specific DOI from Zenodo. Please also cite the associated scientific article listed below."
 
@@ -7,29 +6,27 @@ title: "ROBIA: Rhodamine Object-Based Image Analysis"
 authors:
   - family-names: "Peñas-Torramilans"
     given-names: "Raquel"
+    orcid: "https://orcid.org/0000-0002-3579-9532"
 
 version: "1.0.0"
 
 abstract: >-
-  ROBIA (Rhodamine Object-Based Image Analysis) is an open-source
+  ROBIA (Rhodamine Object-Based Image Analysis) is a software
   workflow developed to detect and map Rhodamine WT (RWT)
   concentrations from UAV-based RGB imagery. It combines RGB
   spectral indices with in situ fluorometric measurements to
   establish site-specific calibration relationships between
   image-derived signals and dye concentrations. The workflow
-  includes configurable masking procedures to exclude non-water
-  features, such as aquaculture infrastructure, enabling the
-  generation of spatially distributed surface tracer concentration
-  maps in complex aquatic environments. ROBIA was developed and
-  tested in Fangar Bay (NW Mediterranean Sea) and provides a
-  reproducible framework for studying tracer dispersion and
-  supporting hydrodynamic transport and dispersion modelling.
+  includes masking procedures to exclude non-water features,
+  such as aquaculture infrastructure, enabling the generation
+  of spatially distributed surface tracer concentration maps
+  in complex aquatic environments. ROBIA was developed and
+  tested in Fangar Bay (NW Mediterranean Sea).
 
 keywords:
   - Rhodamine WT
   - UAV
   - RGB imagery
-  - Object-based image analysis
   - Fluorescent dye tracer
   - Tracer dispersion
   - Coastal environments
