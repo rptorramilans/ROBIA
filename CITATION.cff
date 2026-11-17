@@ -1,0 +1,63 @@
+
+cff-version: 1.2.0
+message: "If you use ROBIA, please cite this software using its version-specific DOI from Zenodo. Please also cite the associated scientific article listed below."
+
+title: "ROBIA: Rhodamine Object-Based Image Analysis"
+
+authors:
+  - family-names: "Peñas-Torramilans"
+    given-names: "Raquel"
+
+version: "1.0.0"
+
+abstract: >-
+  ROBIA (Rhodamine Object-Based Image Analysis) is an open-source
+  workflow developed to detect and map Rhodamine WT (RWT)
+  concentrations from UAV-based RGB imagery. It combines RGB
+  spectral indices with in situ fluorometric measurements to
+  establish site-specific calibration relationships between
+  image-derived signals and dye concentrations. The workflow
+  includes configurable masking procedures to exclude non-water
+  features, such as aquaculture infrastructure, enabling the
+  generation of spatially distributed surface tracer concentration
+  maps in complex aquatic environments. ROBIA was developed and
+  tested in Fangar Bay (NW Mediterranean Sea) and provides a
+  reproducible framework for studying tracer dispersion and
+  supporting hydrodynamic transport and dispersion modelling.
+
+keywords:
+  - Rhodamine WT
+  - UAV
+  - RGB imagery
+  - Object-based image analysis
+  - Fluorescent dye tracer
+  - Tracer dispersion
+  - Coastal environments
+  - Aquaculture
+  - Surface concentration mapping
+
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Peñas-Torramilans"
+      given-names: "Raquel"
+    - family-names: "Calvillo Melero"
+      given-names: "Benjamí"
+    - family-names: "Fernández-Tejedor"
+      given-names: "Margarita"
+    - family-names: "Espino Infantes"
+      given-names: "Manuel"
+    - family-names: "Sánchez-Arcilla Conejo"
+      given-names: "Agustín"
+    - family-names: "Balsells Fernández-Pedrera"
+      given-names: "Marta"
+    - family-names: "Chen"
+      given-names: "Yang"
+    - family-names: "Grifoll Colls"
+      given-names: "Manel"
+  title: "UAV-based mapping of surface fluorescent tracer concentrations in obstructed aquatic environments"
+  journal: "Remote Sensing Applications: Society and Environment"
+  volume: 43
+  year: 2026
+  doi: "10.1016/j.rsase.2026.102243"
+  url: "https://doi.org/10.1016/j.rsase.2026.102243"
