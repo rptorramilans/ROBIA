@@ -9,6 +9,27 @@ authors:
     given-names: "Raquel"
     orcid: "https://orcid.org/0000-0002-3579-9532"
 
+  - family-names: "Calvillo Melero"
+    given-names: "Benjamí"
+
+  - family-names: "Fernández-Tejedor"
+    given-names: "Margarita"
+
+  - family-names: "Espino Infantes"
+    given-names: "Manuel"
+
+  - family-names: "Sánchez-Arcilla Conejo"
+    given-names: "Agustín"
+
+  - family-names: "Balsells Fernández-Pedrera"
+    given-names: "Marta"
+
+  - family-names: "Chen"
+    given-names: "Yang"
+
+  - family-names: "Grifoll Colls"
+    given-names: "Manel"
+
 version: "1.0.0"
 doi: "10.5281/zenodo.24303723"
 date-released: "2026-11-17"
