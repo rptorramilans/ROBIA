@@ -1,4 +1,5 @@
 cff-version: 1.2.0
+
 message: "If you use ROBIA, please cite this software using its version-specific DOI from Zenodo. Please also cite the associated scientific article listed below."
 
 title: "ROBIA: Rhodamine Object-Based Image Analysis"
@@ -9,8 +10,8 @@ authors:
     orcid: "https://orcid.org/0000-0002-3579-9532"
 
 version: "1.0.0"
+doi: "10.5281/zenodo.24303723"
 date-released: "2026-11-17"
-
 repository-code: "https://github.com/rptorramilans/ROBIA"
 
 abstract: >-
